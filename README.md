@@ -35,9 +35,15 @@ The `client` object is used to send messages and contains two methods: `send_sms
     client.send_sms_simple(
         msisdn = '69123456',
         body = 'Test message.',
+        prefix = '373',
     )
 
     client.send_sms_nde(
         msisdn = '69123456',
         body = 'Test message.',
+        prefix = '373',
+        dlr_url = 'https://example.com/dlr',
+        dlr_mask = '31',
+        charset = 'utf8',
+        coding = '2',
     )
