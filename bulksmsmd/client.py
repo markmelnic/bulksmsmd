@@ -9,10 +9,10 @@ class SMSClient:
         username (str): Nume de utilizator unic al clientului.
         password (str): Parola de acces.
         sender (str): Nume ale senderilor  prestabilite în contract. Maximum 11 simboluri.
-        dlrurl (str, optional): Adresa URL care va fi apelată pentru trimiterea raportului DLR. Defaults to ''.
-        dlrmask (int, optional): Mască de biţi, pentru determinarea rapoartelor DLR necesare. Defaults to 31.
-        charset (str, optional): Determină  codificarile în care se trimit textele mesajelor. Codificari disponibile: plaintext, windows-1251, utf8. Defaults to 'utf-8'.
-        coding (str, optional): Folosiţi întotdeauna: 2. Defaults to '2'.
+        dlrurl (str, optional): Adresa URL care va fi apelată pentru trimiterea raportului DLR. Defaults to `''`.
+        dlrmask (int, optional): Mască de biţi, pentru determinarea rapoartelor DLR necesare. Defaults to `31`.
+        charset (str, optional): Determină  codificarile în care se trimit textele mesajelor. Codificari disponibile: plaintext, windows-1251, utf8. Defaults to `'utf8'`.
+        coding (str, optional): Folosiţi întotdeauna: 2. Defaults to `'2'`.
     """
 
     def __init__(
@@ -22,10 +22,11 @@ class SMSClient:
             sender: str,
             dlrurl: str = '',
             dlrmask: int = 31,
-            charset: str = 'utf-8',
+            charset: str = 'utf8',
             coding: str = '2',
         ) -> None:
-        self.base_url = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSNoneDigitsEncoded?'
+        self.base_url_simple = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSSimple?'
+        self.base_url_nde = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSNoneDigitsEncoded?'
         self.username = username
         self.password = password
         self.sender = sender
@@ -34,11 +35,24 @@ class SMSClient:
         self.charset = charset
         self.coding = coding
 
-    def _make_api_request(self, url: str, params: dict) -> dict:
-        res = get(self.base_url + urlencode(params))
-        return res
+    def _make_api_request(
+            self,
+            url: str,
+            params: dict
+        ) -> dict:
 
-    def send_sms_simple(self, msisdn: str, body: str, prefix: str = '373') -> dict:
+        params['username'] = self.username
+        params['password'] = self.password
+
+        return get(url + urlencode(params))
+
+    def send_sms_simple(
+            self,
+            msisdn: str,
+            body: str,
+            prefix: str = '373'
+        ) -> dict:
+
         """SendSMSSimple\n
         Varianta simplă a serviciului,
         care necesită date minime de intrare şi care nu necesită rapoarte de remitere SMS la abonat.
@@ -48,23 +62,29 @@ class SMSClient:
         Args:
             msisdn (str): Phone number without prefix.
             body (str): Body of the message.
-            prefix (str, optional): Phone number prefix. Defaults to '373'.
+            prefix (str, optional): Phone number prefix. Defaults to `'373'`.
 
         Returns:
             dict: Send message request response.
         """
 
-        base_url = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSSimple?'
-
-        return self._make_api_request(base_url, {
-            'username': self.username,
-            'password': self.password,
+        return self._make_api_request(self.base_url_simple, {
             'from': self.sender,
             'to': prefix + msisdn,
             'text': body,
         })
 
-    def send_sms_nde(self, msisdn: str, body: str, prefix: str = '373') -> dict:
+    def send_sms_nde(
+            self,
+            msisdn: str,
+            body: str,
+            dlrurl: str,
+            dlrmask: int,
+            charset: str,
+            coding: str,
+            prefix: str = '373',
+        ) -> dict:
+
         """SendSMSNoneDigitsEncoded\n
         Varianta deplină a serviciului,
         care permite trimiterea mesajelor SMS către abonaţi în diferite standarde de codificare,
@@ -73,22 +93,22 @@ class SMSClient:
         Args:
             msisdn (str): Phone number without prefix.
             body (str): Body of the message.
-            prefix (str, optional): Phone number prefix. Defaults to '373'.
+            prefix (str, optional): Phone number prefix. Defaults to `'373'`.
+            dlrurl (str, optional): Adresa URL care va fi apelată pentru trimiterea raportului DLR. Defaults to `SMSClient.dlrurl` property or `''` if not modified.
+            dlrmask (int, optional): Mască de biţi, pentru determinarea rapoartelor DLR necesare. Defaults to `SMSClient.dlrmask` property or `31` if not modified.
+            charset (str, optional): Determină  codificarile în care se trimit textele mesajelor. Codificari disponibile: plaintext, windows-1251, utf8. Defaults to `SMSClient.charset` property or `'utf8'` if not modified.
+            coding (str, optional): Folosiţi întotdeauna: 2. Defaults to `SMSClient.coding` property or `'2'` if not modified.
 
         Returns:
             dict: Send message request response.
         """
 
-        base_url = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSNoneDigitsEncoded?'
-
-        return self._make_api_request(base_url, {
-            'username': self.username,
-            'password': self.password,
-            'charset': self.charset,
-            'dlrmask': self.dlrmask,
-            'dlrurl': self.dlrurl,
-            'coding': self.coding,
+        return self._make_api_request(self.base_url_nde, {
             'from': self.sender,
             'to': prefix + msisdn,
             'text': body,
+            'charset': charset if charset else self.charset,
+            'dlrmask': dlrmask if dlrmask else self.dlrmask,
+            'dlrurl': dlrurl if dlrurl else self.dlrurl,
+            'coding': coding if coding else self.coding,
         })
