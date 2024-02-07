@@ -1,6 +1,7 @@
 from requests import get
 from urllib.parse import urlencode
 
+
 class SMSClient:
     """BulkSMSAPI Wrapper (bulksms.md)\n
     SMSClient object contains two methods: `send_sms_simple` & `send_sms_nde`.
@@ -17,18 +18,20 @@ class SMSClient:
     """
 
     def __init__(
-            self,
-            username: str,
-            password: str,
-            sender: str,
-            dlrurl: str = '',
-            dlrmask: int = 31,
-            charset: str = 'utf8',
-            coding: str = '2',
-            proxy: str = None
-        ) -> None:
-        self.base_url_simple = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSSimple?'
-        self.base_url_nde = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSNoneDigitsEncoded?'
+        self,
+        username: str,
+        password: str,
+        sender: str,
+        dlrurl: str = "",
+        dlrmask: int = 31,
+        charset: str = "utf8",
+        coding: str = "2",
+        proxy: str = None,
+    ) -> None:
+        self.base_url_simple = (
+            "https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSSimple?"
+        )
+        self.base_url_nde = "https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSNoneDigitsEncoded?"
         self.username = username
         self.password = password
         self.sender = sender
@@ -38,32 +41,18 @@ class SMSClient:
         self.coding = coding
         self.proxy = proxy
 
-    def _make_api_request(
-            self,
-            url: str,
-            params: dict
-        ) -> dict:
+    def _make_api_request(self, url: str, params: dict) -> dict:
+        params["username"] = self.username
+        params["password"] = self.password
 
-        params['username'] = self.username
-        params['password'] = self.password
+        return get(url + urlencode(params), proxies=self.proxy)
 
-        return get(
-            url + urlencode(params),
-            proxies=self.proxy
-        )
-
-    def send_sms_simple(
-            self,
-            msisdn: str,
-            body: str,
-            prefix: str = '373'
-        ) -> dict:
-
+    def send_sms_simple(self, msisdn: str, body: str, prefix: str = "373") -> dict:
         """SendSMSSimple\n
         Varianta simplă a serviciului,
         care necesită date minime de intrare şi care nu necesită rapoarte de remitere SMS la abonat.
         În acest regim este posibilă trimiterea doar a mesajelor cu texte codificate în format plaintext,
-        care conţin doar literele alfabetului latin nu mai mare de 160 de caractere. 
+        care conţin doar literele alfabetului latin nu mai mare de 160 de caractere.
 
         Args:
             msisdn (str): Phone number without prefix.
@@ -74,23 +63,25 @@ class SMSClient:
             dict: Send message request response.
         """
 
-        return self._make_api_request(self.base_url_simple, {
-            'from': self.sender,
-            'to': prefix + msisdn,
-            'text': body,
-        })
+        return self._make_api_request(
+            self.base_url_simple,
+            {
+                "from": self.sender,
+                "to": prefix + msisdn,
+                "text": body,
+            },
+        )
 
     def send_sms_nde(
-            self,
-            msisdn: str,
-            body: str,
-            dlrurl: str,
-            dlrmask: int,
-            charset: str,
-            coding: str,
-            prefix: str = '373',
-        ) -> dict:
-
+        self,
+        msisdn: str,
+        body: str,
+        dlrurl: str,
+        dlrmask: int,
+        charset: str,
+        coding: str,
+        prefix: str = "373",
+    ) -> dict:
         """SendSMSNoneDigitsEncoded\n
         Varianta deplină a serviciului,
         care permite trimiterea mesajelor SMS către abonaţi în diferite standarde de codificare,
@@ -109,12 +100,15 @@ class SMSClient:
             dict: Send message request response.
         """
 
-        return self._make_api_request(self.base_url_nde, {
-            'from': self.sender,
-            'to': prefix + msisdn,
-            'text': body,
-            'charset': charset if charset else self.charset,
-            'dlrmask': dlrmask if dlrmask else self.dlrmask,
-            'dlrurl': dlrurl if dlrurl else self.dlrurl,
-            'coding': coding if coding else self.coding,
-        })
+        return self._make_api_request(
+            self.base_url_nde,
+            {
+                "from": self.sender,
+                "to": prefix + msisdn,
+                "text": body,
+                "charset": charset if charset else self.charset,
+                "dlrmask": dlrmask if dlrmask else self.dlrmask,
+                "dlrurl": dlrurl if dlrurl else self.dlrurl,
+                "coding": coding if coding else self.coding,
+            },
+        )
