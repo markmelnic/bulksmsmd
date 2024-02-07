@@ -13,6 +13,7 @@ class SMSClient:
         dlrmask (int, optional): Mască de biţi, pentru determinarea rapoartelor DLR necesare. Defaults to `31`.
         charset (str, optional): Determină  codificarile în care se trimit textele mesajelor. Codificari disponibile: plaintext, windows-1251, utf8. Defaults to `'utf8'`.
         coding (str, optional): Folosiţi întotdeauna: 2. Defaults to `'2'`.
+        proxy (dict, optional): Proxy settings in the following format: `{"http": PROXY_URL, "https": PROXY_URL}`. Defaults to `None`.
     """
 
     def __init__(
@@ -24,6 +25,7 @@ class SMSClient:
             dlrmask: int = 31,
             charset: str = 'utf8',
             coding: str = '2',
+            proxy: str = None
         ) -> None:
         self.base_url_simple = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSSimple?'
         self.base_url_nde = 'https://api.bulksms.md:4432/UnifunBulkSMSAPI.asmx/SendSMSNoneDigitsEncoded?'
@@ -34,6 +36,7 @@ class SMSClient:
         self.dlrmask = dlrmask
         self.charset = charset
         self.coding = coding
+        self.proxy = proxy
 
     def _make_api_request(
             self,
@@ -44,7 +47,10 @@ class SMSClient:
         params['username'] = self.username
         params['password'] = self.password
 
-        return get(url + urlencode(params))
+        return get(
+            url + urlencode(params),
+            proxies=self.proxy
+        )
 
     def send_sms_simple(
             self,
