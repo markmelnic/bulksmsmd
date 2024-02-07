@@ -11,3 +11,7 @@
 ## 0.1.2 (2022-03-03)
 
 * Multiple changes & documentation improved.
+
+## 0.1.3 (2023-02-07)
+
+* Proxy support added.
